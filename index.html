@@ -199,8 +199,10 @@
   }
   .pick-grid label:has(input:checked) { border-color: var(--grape); background: var(--lavender); }
   .pick-grid label:has(input:disabled) { opacity: 0.45; cursor: not-allowed; }
-  .pick-grid input { width: 16px; height: 16px; accent-color: var(--grape); flex-shrink: 0; }
+  .pick-grid input { width: 18px; height: 18px; accent-color: var(--grape); flex-shrink: 0; }
+  .pick-grid label span:first-of-type { min-width: 0; overflow-wrap: anywhere; }
   .pick-grid .addon { color: var(--grape); font-weight: 700; margin-left: auto; font-size: 0.82rem; white-space: nowrap; }
+  body.modal-open { overflow: hidden; }
   .modal .qty-row {
     display: flex;
     align-items: center;
@@ -378,6 +380,21 @@
   .fine { font-size: 0.85rem; font-style: italic; margin-top: 8px; }
 
   footer { text-align: center; padding: 24px; font-size: 0.85rem; color: #8a6fae; }
+
+  /* ---------- small screens ---------- */
+  @media (max-width: 480px) {
+    header.hero { padding-top: 32px; }
+    .hero img.logo { width: 120px; height: 120px; }
+    main { padding: 20px 14px 60px; }
+    .overlay { padding: 10px; }
+    .modal { padding: 20px 16px 16px; margin: 2vh auto; }
+    /* toppings have long names + a price tag — one per row on phones */
+    #modal-toppings { grid-template-columns: 1fr; }
+    .qty button { width: 38px; height: 38px; }
+    button.add-btn { padding: 8px 18px; }
+    .cart-line button.remove { padding: 8px; font-size: 1.35rem; }
+  }
+
 </style>
 </head>
 <body>
@@ -656,10 +673,12 @@ function openModal(variant) {
     `<label><input type="checkbox" name="m-topping" data-i="${i}"><span>${t.name}</span><span class="addon">+${money(t.price)}</span></label>`).join("");
 
   overlay.classList.add("open");
+  document.body.classList.add("modal-open");
   updateModalPrice();
 }
 function closeModal() {
   overlay.classList.remove("open");
+  document.body.classList.remove("modal-open");
   activeVariant = null;
 }
 document.getElementById("modal-close").addEventListener("click", closeModal);
