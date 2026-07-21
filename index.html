@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BB's Sugarvine Candied Fruit — Custom Orders</title>
+<meta name="description" content="Hand-dipped candy fruit made to order. Place a custom order for pickup.">
+<link rel="icon" href="assets/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root {
+    --grape: #9d2fd1;       /* heading purple */
+    --grape-dark: #7b1fa8;
+    --navy: #23409e;        /* body text blue */
+    --lavender: #f5effc;    /* page background */
+    --card: #ffffff;
+    --border: #e4d5f5;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Poppins", system-ui, sans-serif;
+    background: var(--lavender);
+    color: var(--navy);
+    line-height: 1.55;
+  }
+  header.hero {
+    text-align: center;
+    padding: 44px 20px 8px;
+  }
+  .hero img.logo {
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+  }
+  .hero h1 {
+    font-weight: 800;
+    font-size: clamp(1.9rem, 6vw, 3rem);
+    color: var(--grape);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin-top: 8px;
+  }
+  .hero .tagline { font-weight: 600; margin-top: 2px; }
+  .hero a.insta {
+    display: inline-block;
+    margin-top: 14px;
+    color: var(--grape);
+    border: 2px solid var(--grape);
+    border-radius: 999px;
+    padding: 7px 20px;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all 0.2s;
+  }
+  .hero a.insta:hover { background: var(--grape); color: #fff; }
+
+  main { max-width: 860px; margin: 0 auto; padding: 28px 20px 80px; }
+
+  .divider {
+    text-align: center;
+    color: var(--navy);
+    margin: 38px 0 30px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .divider::before, .divider::after {
+    content: "";
+    flex: 1;
+    border-top: 1.5px solid var(--navy);
+  }
+  .divider span { font-size: 1.2rem; }
+
+  h2.section-title {
+    text-align: center;
+    color: var(--grape);
+    font-weight: 800;
+    text-transform: uppercase;
+    font-size: clamp(1.3rem, 4vw, 1.8rem);
+    letter-spacing: 0.02em;
+    margin-bottom: 4px;
+  }
+  p.section-note {
+    text-align: center;
+    font-style: italic;
+    font-size: 0.92rem;
+    margin-bottom: 18px;
+  }
+
+  /* fruit category grid */
+  .fruit-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+  }
+  .card {
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 18px 18px 14px;
+  }
+  .card h3 {
+    color: var(--grape);
+    text-transform: uppercase;
+    font-weight: 800;
+    font-size: 1.15rem;
+    text-align: center;
+    margin-bottom: 2px;
+  }
+  .card .rule {
+    text-align: center;
+    font-style: italic;
+    font-size: 0.85rem;
+    margin-bottom: 10px;
+  }
+  .variant {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 8px 0;
+    border-top: 1px dashed var(--border);
+  }
+  .variant .vname { font-weight: 600; font-size: 0.95rem; flex: 1; }
+  .variant .vname small { display: block; font-weight: 400; font-style: italic; font-size: 0.8rem; }
+  .variant .vprice { font-weight: 700; color: var(--grape); white-space: nowrap; }
+  button.add-btn {
+    border: 2px solid var(--grape);
+    background: #fff;
+    color: var(--grape);
+    border-radius: 999px;
+    padding: 5px 16px;
+    font-family: inherit;
+    font-weight: 700;
+    font-size: 0.88rem;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  button.add-btn:hover { background: var(--grape); color: #fff; }
+
+  /* ============ modal ============ */
+  .overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(43, 20, 60, 0.55);
+    z-index: 50;
+    padding: 20px;
+    overflow-y: auto;
+  }
+  .overlay.open { display: flex; align-items: flex-start; justify-content: center; }
+  .modal {
+    background: #fff;
+    border-radius: 18px;
+    max-width: 460px;
+    width: 100%;
+    margin: 4vh auto;
+    padding: 24px 24px 20px;
+    position: relative;
+  }
+  .modal h3 { color: var(--grape); font-weight: 800; font-size: 1.2rem; padding-right: 30px; }
+  .modal .base-price { font-weight: 600; font-size: 0.95rem; margin-bottom: 4px; }
+  .modal .close-x {
+    position: absolute;
+    top: 14px; right: 16px;
+    border: none; background: none;
+    font-size: 1.5rem;
+    color: var(--grape);
+    cursor: pointer;
+    line-height: 1;
+  }
+  .modal h4 {
+    color: var(--grape-dark);
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.04em;
+    margin: 16px 0 8px;
+  }
+  .modal h4 small { text-transform: none; letter-spacing: 0; font-weight: 400; font-style: italic; }
+  .pick-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 10px;
+  }
+  .pick-grid label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 0.88rem;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 10px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .pick-grid label:has(input:checked) { border-color: var(--grape); background: var(--lavender); }
+  .pick-grid label:has(input:disabled) { opacity: 0.45; cursor: not-allowed; }
+  .pick-grid input { width: 16px; height: 16px; accent-color: var(--grape); flex-shrink: 0; }
+  .pick-grid .addon { color: var(--grape); font-weight: 700; margin-left: auto; font-size: 0.82rem; white-space: nowrap; }
+  .modal .qty-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 16px;
+  }
+  .qty { display: flex; align-items: center; gap: 10px; }
+  .qty button {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    border: 2px solid var(--grape);
+    background: #fff;
+    color: var(--grape);
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    line-height: 1;
+  }
+  .qty .count { min-width: 20px; text-align: center; font-weight: 700; }
+  .modal .modal-error {
+    color: #b00020;
+    font-size: 0.85rem;
+    margin-top: 10px;
+    display: none;
+  }
+  button.confirm-add {
+    width: 100%;
+    margin-top: 14px;
+    background: var(--grape);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 13px;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 800;
+    cursor: pointer;
+  }
+  button.confirm-add:hover { background: var(--grape-dark); }
+
+  /* ============ cart ============ */
+  .cart {
+    max-width: 620px;
+    margin: 0 auto;
+  }
+  .cart .empty {
+    text-align: center;
+    font-style: italic;
+    background: var(--card);
+    border: 1.5px dashed var(--border);
+    border-radius: 12px;
+    padding: 18px;
+  }
+  .cart-line {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+  }
+  .cart-line .detail { flex: 1; }
+  .cart-line .title { font-weight: 700; font-size: 0.95rem; }
+  .cart-line .extras { font-size: 0.83rem; font-style: italic; }
+  .cart-line .price { font-weight: 700; color: var(--grape); white-space: nowrap; }
+  .cart-line button.remove {
+    border: none;
+    background: none;
+    color: #b00020;
+    font-size: 1.2rem;
+    cursor: pointer;
+    line-height: 1;
+    padding: 4px;
+  }
+
+  /* contact fields */
+  .info-wrap { max-width: 620px; margin: 0 auto; }
+  label.field { display: block; margin-bottom: 14px; font-weight: 600; font-size: 0.92rem; }
+  label.field input, label.field textarea {
+    display: block; width: 100%;
+    margin-top: 5px;
+    padding: 11px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font: inherit;
+    background: #fff;
+    color: var(--navy);
+  }
+  label.field input:focus, label.field textarea:focus {
+    outline: 2px solid var(--grape);
+    border-color: transparent;
+  }
+
+  .policies {
+    max-width: 620px;
+    margin: 0 auto 20px;
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 20px;
+    font-size: 0.9rem;
+  }
+  .policies li { margin-left: 20px; }
+
+  .total-bar {
+    max-width: 620px;
+    margin: 22px auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #ece0fa;
+    border-radius: 12px;
+    padding: 15px 20px;
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--grape-dark);
+  }
+  button.submit {
+    display: block;
+    width: 100%;
+    max-width: 620px;
+    margin: 0 auto;
+    background: var(--grape);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 16px;
+    font-family: inherit;
+    font-size: 1.1rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  button.submit:hover:not(:disabled) { background: var(--grape-dark); }
+  button.submit:disabled { opacity: 0.6; cursor: wait; }
+  .error-msg {
+    max-width: 620px;
+    margin: 14px auto 0;
+    color: #b00020;
+    background: #fdecef;
+    border-radius: 10px;
+    padding: 12px 16px;
+    display: none;
+  }
+
+  /* Confirmation screen */
+  #confirmation { display: none; text-align: center; }
+  #confirmation .check { font-size: 3rem; }
+  #confirmation .summary {
+    text-align: left;
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 22px;
+    margin: 22px auto;
+    max-width: 520px;
+  }
+  #confirmation .summary li { margin-left: 20px; margin-bottom: 6px; }
+  #confirmation .summary li small { display: block; font-style: italic; }
+  .venmo-box {
+    background: #ece0fa;
+    border-radius: 16px;
+    padding: 26px 20px;
+    margin: 10px auto 0;
+    max-width: 520px;
+  }
+  .venmo-box h3 { color: var(--grape-dark); margin-bottom: 4px; text-transform: uppercase; }
+  #qrcode { display: inline-block; background: #fff; padding: 14px; border-radius: 12px; margin: 14px 0 8px; }
+  #qrcode img, #qrcode canvas { display: block; }
+  .venmo-handle { font-weight: 800; color: var(--grape); font-size: 1.1rem; }
+  .fine { font-size: 0.85rem; font-style: italic; margin-top: 8px; }
+
+  footer { text-align: center; padding: 24px; font-size: 0.85rem; color: #8a6fae; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <img class="logo" src="assets/logo.png" alt="BB's Sugarvine Candied Fruit logo">
+  <h1>Candy Fruit Menu</h1>
+  <p class="tagline">BB's Sugarvine Candied Fruit — made fresh for every order</p>
+  <a class="insta" href="https://www.instagram.com/sugarvinecandiedfruit/" target="_blank" rel="noopener">
+    @sugarvinecandiedfruit
+  </a>
+</header>
+
+<main>
+  <!-- ============ MENU ============ -->
+  <div class="fruit-grid" id="fruit-grid"><!-- rendered by JS --></div>
+
+  <div class="divider"><span>✦</span></div>
+
+  <h2 class="section-title">Candied Fruit Combos</h2>
+  <div class="fruit-grid" id="combo-grid"><!-- rendered by JS --></div>
+
+  <div class="divider"><span>✦</span></div>
+
+  <!-- ============ CART + CHECKOUT ============ -->
+  <form id="order-form" novalidate>
+    <h2 class="section-title">Your Order</h2>
+    <p class="section-note">Tap “Add” on any item above to pick flavors &amp; toppings</p>
+    <div class="cart" id="cart"></div>
+
+    <div class="divider"><span>✦</span></div>
+
+    <h2 class="section-title">Your Info</h2>
+    <div class="info-wrap">
+      <label class="field">Name
+        <input type="text" name="name" required autocomplete="name">
+      </label>
+      <label class="field">Email (for your receipt)
+        <input type="email" name="email" required autocomplete="email">
+      </label>
+      <label class="field">Phone
+        <input type="tel" name="phone" autocomplete="tel">
+      </label>
+      <label class="field">Special requests
+        <textarea name="notes" rows="3" placeholder="Allergies, occasion, custom requests…"></textarea>
+      </label>
+    </div>
+
+    <div class="policies">
+      <strong>Please note:</strong>
+      <ul>
+        <li>Payment due at time of order — <em>do not send payment without order confirmation</em></li>
+        <li>Venmo, Apple Pay and Cash accepted</li>
+        <li>No same-day orders</li>
+      </ul>
+    </div>
+
+    <div class="total-bar">
+      <span>Total</span>
+      <span id="total">$0.00</span>
+    </div>
+
+    <button type="submit" class="submit" id="submit-btn">Place Order</button>
+    <div class="error-msg" id="error-msg"></div>
+  </form>
+
+  <!-- ============ CONFIRMATION ============ -->
+  <section id="confirmation">
+    <div class="check">✅</div>
+    <h2 class="section-title">Order received — thank you!</h2>
+    <p class="section-note">A receipt has been emailed to you. BB will confirm your order shortly.</p>
+
+    <div class="summary">
+      <strong>Your order:</strong>
+      <ul id="confirm-items"></ul>
+      <p style="margin-top:10px"><strong>Total: <span id="confirm-total"></span></strong></p>
+    </div>
+
+    <div class="venmo-box">
+      <h3>Pay with Venmo</h3>
+      <p class="section-note" style="margin-bottom:0">Scan with your phone camera, or tap the handle below.<br>
+      <em>Please wait for order confirmation before sending payment.</em></p>
+      <div id="qrcode"></div>
+      <div><a class="venmo-handle" id="venmo-link" href="#" target="_blank" rel="noopener"></a></div>
+      <p class="fine">Apple Pay and Cash also accepted. Include your name in the payment note 💌</p>
+    </div>
+  </section>
+</main>
+
+<!-- ============ ITEM CONFIG MODAL ============ -->
+<div class="overlay" id="overlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <button type="button" class="close-x" id="modal-close" aria-label="Close">×</button>
+    <h3 id="modal-title"></h3>
+    <p class="base-price" id="modal-base"></p>
+
+    <h4 id="flavor-heading"></h4>
+    <div class="pick-grid" id="modal-flavors"></div>
+
+    <h4>Toppings <small>— $2 each</small></h4>
+    <div class="pick-grid" id="modal-toppings"></div>
+
+    <div class="qty-row">
+      <strong>Quantity</strong>
+      <div class="qty">
+        <button type="button" id="qty-minus" aria-label="Decrease quantity">−</button>
+        <span class="count" id="qty-count">1</span>
+        <button type="button" id="qty-plus" aria-label="Increase quantity">+</button>
+      </div>
+    </div>
+
+    <div class="modal-error" id="modal-error"></div>
+    <button type="button" class="confirm-add" id="confirm-add">Add to order — $0.00</button>
+  </div>
+</div>
+
+<footer>© <span id="year"></span> BB's Sugarvine Candied Fruit</footer>
+
+<script>
+/* =====================================================================
+   CONFIGURATION — edit everything in this block, nothing else needed.
+   ===================================================================== */
+const CONFIG = {
+  // Where order emails go (her email). First order triggers a one-time
+  // activation email from FormSubmit.co that she must click.
+  businessEmail: "REPLACE_WITH_HER_EMAIL@example.com",
+
+  // Venmo username WITHOUT the @ — e.g. "Jane-Doe-12"
+  venmoUsername: "REPLACE_WITH_VENMO_USERNAME",
+
+  businessName: "BB's Sugarvine Candied Fruit",
+
+  // maxFlavors: how many flavors the item allows.
+  // extraFlavorPrice: cost of the 2nd flavor (only used when maxFlavors is 2).
+  fruits: [
+    {
+      title: "Grapes",
+      rule: "Additional flavor $5 for LG & XL",
+      variants: [
+        { name: "Small",   price: 15, maxFlavors: 1 },
+        { name: "Large",   price: 25, maxFlavors: 2, extraFlavorPrice: 5 },
+        { name: "X-Large", price: 45, maxFlavors: 2, extraFlavorPrice: 5 },
+      ],
+    },
+    {
+      title: "Pineapple Rings",
+      rule: "2 flavors available on 10 rings",
+      variants: [
+        { name: "5 Rings",  price: 20, maxFlavors: 1 },
+        { name: "10 Rings", price: 35, maxFlavors: 2, extraFlavorPrice: 5 },
+      ],
+    },
+    {
+      title: "Strawberries",
+      rule: "2 flavors available on large",
+      variants: [
+        { name: "Small", price: 15, maxFlavors: 1 },
+        { name: "Large", price: 25, maxFlavors: 2, extraFlavorPrice: 5 },
+      ],
+    },
+    {
+      title: "Blueberry Clusters",
+      rule: "1 flavor only for both sizes",
+      variants: [
+        { name: "Small", price: 10, maxFlavors: 1 },
+        { name: "Large", price: 20, maxFlavors: 1 },
+      ],
+    },
+  ],
+
+  combos: [
+    {
+      title: "Combos",
+      rule: "1 flavor only",
+      variants: [
+        { name: "3 Pineapple Rings + Grapes", price: 25, maxFlavors: 1 },
+        { name: "4 Strawberries + Grapes",    price: 30, maxFlavors: 1 },
+      ],
+    },
+    {
+      title: "Big Combos",
+      rule: "Additional flavor $5",
+      variants: [
+        { name: "5 Pineapple Rings + Grapes",  price: 45, maxFlavors: 2, extraFlavorPrice: 5 },
+        { name: "10 Strawberries + Grapes",    price: 50, maxFlavors: 2, extraFlavorPrice: 5 },
+      ],
+    },
+  ],
+
+  toppings: [
+    { name: "Jolly Ranchers (assorted)", price: 2 },
+    { name: "Jolly Ranchers (blue razz only)", price: 2 },
+    { name: "Cotton Candy Crumble", price: 2 },
+    { name: "Nerds", price: 2 },
+    { name: "Sweet & Sour Coating", price: 2 },
+    { name: "Caramel Bits", price: 2 },
+    { name: "Wrap in fruit roll-ups", price: 5 },
+  ],
+
+  flavors: [
+    "Cotton Candy", "Tutti Frutti", "Strawberry", "Blue Raspberry",
+    "Watermelon", "Peach Mango", "Bubble Gum", "Green Apple",
+  ],
+};
+/* ===================================================================== */
+
+const allSections = [...CONFIG.fruits, ...CONFIG.combos];
+const allVariants = allSections.flatMap(s => s.variants.map(v => ({ ...v, section: s.title })));
+const cart = []; // { variant, flavors: [], toppings: [], qty, unitPrice }
+
+const form = document.getElementById("order-form");
+const totalEl = document.getElementById("total");
+const submitBtn = document.getElementById("submit-btn");
+const errorEl = document.getElementById("error-msg");
+
+document.getElementById("year").textContent = new Date().getFullYear();
+
+function money(n) { return "$" + n.toFixed(2); }
+
+/* ---------- render menu ---------- */
+function renderCards(sections, containerId, startIndex) {
+  const container = document.getElementById(containerId);
+  let idx = startIndex;
+  sections.forEach(section => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `<h3>${section.title}</h3>` +
+      (section.rule ? `<p class="rule">${section.rule}</p>` : "");
+    section.variants.forEach(v => {
+      const i = idx++;
+      const row = document.createElement("div");
+      row.className = "variant";
+      row.innerHTML = `
+        <div class="vname">${v.name}<small>${v.maxFlavors === 1 ? "1 flavor" : "up to 2 flavors"}</small></div>
+        <div class="vprice">${money(v.price)}</div>
+        <button type="button" class="add-btn" data-i="${i}">Add</button>`;
+      card.appendChild(row);
+    });
+    container.appendChild(card);
+  });
+  return idx;
+}
+const fruitCount = renderCards(CONFIG.fruits, "fruit-grid", 0);
+renderCards(CONFIG.combos, "combo-grid", fruitCount);
+
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest("button.add-btn");
+  if (btn) openModal(allVariants[Number(btn.dataset.i)]);
+});
+
+/* ---------- modal ---------- */
+const overlay = document.getElementById("overlay");
+const modalFlavorsEl = document.getElementById("modal-flavors");
+const modalToppingsEl = document.getElementById("modal-toppings");
+const modalErrorEl = document.getElementById("modal-error");
+const confirmBtn = document.getElementById("confirm-add");
+const qtyCountEl = document.getElementById("qty-count");
+let activeVariant = null;
+let qty = 1;
+
+function openModal(variant) {
+  activeVariant = variant;
+  qty = 1;
+  qtyCountEl.textContent = "1";
+  modalErrorEl.style.display = "none";
+
+  document.getElementById("modal-title").textContent = `${variant.section} — ${variant.name}`;
+  document.getElementById("modal-base").textContent = money(variant.price);
+  document.getElementById("flavor-heading").innerHTML = variant.maxFlavors === 1
+    ? "Pick your flavor <small>— choose 1</small>"
+    : `Pick your flavors <small>— up to 2, second flavor +${money(variant.extraFlavorPrice)}</small>`;
+
+  modalFlavorsEl.innerHTML = CONFIG.flavors.map(f =>
+    `<label><input type="checkbox" name="m-flavor" value="${f}"><span>${f}</span></label>`).join("");
+  modalToppingsEl.innerHTML = CONFIG.toppings.map((t, i) =>
+    `<label><input type="checkbox" name="m-topping" data-i="${i}"><span>${t.name}</span><span class="addon">+${money(t.price)}</span></label>`).join("");
+
+  overlay.classList.add("open");
+  updateModalPrice();
+}
+function closeModal() {
+  overlay.classList.remove("open");
+  activeVariant = null;
+}
+document.getElementById("modal-close").addEventListener("click", closeModal);
+overlay.addEventListener("click", (e) => { if (e.target === overlay) closeModal(); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
+
+function pickedFlavors() {
+  return [...modalFlavorsEl.querySelectorAll("input:checked")].map(cb => cb.value);
+}
+function pickedToppings() {
+  return [...modalToppingsEl.querySelectorAll("input:checked")].map(cb => CONFIG.toppings[Number(cb.dataset.i)]);
+}
+function unitPrice() {
+  const extra = pickedFlavors().length > 1 ? activeVariant.extraFlavorPrice : 0;
+  const tops = pickedToppings().reduce((sum, t) => sum + t.price, 0);
+  return activeVariant.price + extra + tops;
+}
+function updateModalPrice() {
+  // enforce the flavor limit: once the max is reached, lock the rest
+  const flavorChecks = [...modalFlavorsEl.querySelectorAll("input")];
+  const picked = flavorChecks.filter(cb => cb.checked).length;
+  flavorChecks.forEach(cb => { cb.disabled = !cb.checked && picked >= activeVariant.maxFlavors; });
+  confirmBtn.textContent = `Add to order — ${money(unitPrice() * qty)}`;
+}
+overlay.addEventListener("change", () => { modalErrorEl.style.display = "none"; updateModalPrice(); });
+document.getElementById("qty-minus").addEventListener("click", () => {
+  qty = Math.max(1, qty - 1);
+  qtyCountEl.textContent = qty;
+  updateModalPrice();
+});
+document.getElementById("qty-plus").addEventListener("click", () => {
+  qty += 1;
+  qtyCountEl.textContent = qty;
+  updateModalPrice();
+});
+
+confirmBtn.addEventListener("click", () => {
+  const flavors = pickedFlavors();
+  if (flavors.length === 0) {
+    modalErrorEl.textContent = "Please pick a flavor first 🍬";
+    modalErrorEl.style.display = "block";
+    return;
+  }
+  const line = {
+    variant: activeVariant,
+    flavors,
+    toppings: pickedToppings(),
+    qty,
+    unitPrice: unitPrice(),
+  };
+  // merge with an identical existing line
+  const key = l => JSON.stringify([l.variant.section, l.variant.name, l.flavors, l.toppings.map(t => t.name)]);
+  const existing = cart.find(l => key(l) === key(line));
+  if (existing) existing.qty += line.qty;
+  else cart.push(line);
+  closeModal();
+  renderCart();
+});
+
+/* ---------- cart ---------- */
+function lineTitle(l) { return `${l.variant.section} — ${l.variant.name}`; }
+function lineExtras(l) {
+  const parts = [l.flavors.join(" + ")];
+  if (l.toppings.length) parts.push("Toppings: " + l.toppings.map(t => t.name).join(", "));
+  return parts.join(" · ");
+}
+function orderTotal() {
+  return cart.reduce((sum, l) => sum + l.qty * l.unitPrice, 0);
+}
+function renderCart() {
+  const el = document.getElementById("cart");
+  if (cart.length === 0) {
+    el.innerHTML = `<div class="empty">Nothing here yet — add some candy fruit! 🍓</div>`;
+  } else {
+    el.innerHTML = "";
+    cart.forEach((l, i) => {
+      const row = document.createElement("div");
+      row.className = "cart-line";
+      row.innerHTML = `
+        <div class="detail">
+          <div class="title">${l.qty} × ${lineTitle(l)}</div>
+          <div class="extras">${lineExtras(l)}</div>
+        </div>
+        <div class="price">${money(l.qty * l.unitPrice)}</div>
+        <button type="button" class="remove" data-i="${i}" aria-label="Remove ${lineTitle(l)}">🗑</button>`;
+      el.appendChild(row);
+    });
+  }
+  totalEl.textContent = money(orderTotal());
+}
+document.getElementById("cart").addEventListener("click", (e) => {
+  const btn = e.target.closest("button.remove");
+  if (!btn) return;
+  cart.splice(Number(btn.dataset.i), 1);
+  renderCart();
+});
+renderCart();
+
+/* ---------- submit ---------- */
+function showError(msg) {
+  errorEl.textContent = msg;
+  errorEl.style.display = "block";
+}
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  errorEl.style.display = "none";
+
+  if (cart.length === 0) {
+    showError("Please add at least one item to your order.");
+    return;
+  }
+  if (!form.reportValidity()) return;
+
+  const data = Object.fromEntries(new FormData(form));
+  const total = orderTotal();
+  const itemsText = cart
+    .map(l => `${l.qty} × ${lineTitle(l)} [${lineExtras(l)}] — ${money(l.qty * l.unitPrice)}`)
+    .join("\n");
+
+  const receipt =
+`Thank you for your order from ${CONFIG.businessName}!
+
+Order summary:
+${itemsText}
+
+Total: ${money(total)}
+
+Payment is due at time of order, but please DO NOT send payment
+until BB confirms your order.
+
+Venmo: https://venmo.com/u/${CONFIG.venmoUsername}
+Apple Pay and Cash also accepted.
+(please include your name in the payment note)
+
+🍇🍓🍍`;
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Sending…";
+
+  try {
+    const res = await fetch("https://formsubmit.co/ajax/" + CONFIG.businessEmail, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Accept": "application/json" },
+      body: JSON.stringify({
+        _subject: `🍇 New order from ${data.name} — ${money(total)}`,
+        _template: "table",
+        _replyto: data.email,
+        _autoresponse: receipt,
+        name: data.name,
+        email: data.email,
+        phone: data.phone || "(not given)",
+        order: itemsText,
+        total: money(total),
+        notes: data.notes || "(none)",
+      }),
+    });
+    if (!res.ok) throw new Error("Request failed");
+    showConfirmation(total);
+  } catch (err) {
+    showError("Something went wrong sending your order. Please try again, or DM us on Instagram.");
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Place Order";
+  }
+});
+
+function showConfirmation(total) {
+  form.style.display = "none";
+  const conf = document.getElementById("confirmation");
+  conf.style.display = "block";
+
+  const ul = document.getElementById("confirm-items");
+  cart.forEach(l => {
+    const li = document.createElement("li");
+    li.innerHTML = `${l.qty} × ${lineTitle(l)} — ${money(l.qty * l.unitPrice)}<small></small>`;
+    li.querySelector("small").textContent = lineExtras(l);
+    ul.appendChild(li);
+  });
+  document.getElementById("confirm-total").textContent = money(total);
+
+  const venmoUrl = `https://venmo.com/u/${CONFIG.venmoUsername}`;
+  const link = document.getElementById("venmo-link");
+  link.href = venmoUrl;
+  link.textContent = "@" + CONFIG.venmoUsername;
+
+  new QRCode(document.getElementById("qrcode"), {
+    text: venmoUrl,
+    width: 180,
+    height: 180,
+    colorDark: "#7b1fa8",
+    colorLight: "#ffffff",
+  });
+
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+</script>
+</body>
+</html>
