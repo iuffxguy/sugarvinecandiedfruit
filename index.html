@@ -833,10 +833,16 @@ Apple Pay and Cash also accepted.
         notes: data.notes || "(none)",
       }),
     });
-    if (!res.ok) throw new Error("Request failed");
+    const body = await res.json();
+    // FormSubmit returns 200 even on failure — the real signal is body.success
+    if (!res.ok || String(body.success) !== "true") {
+      throw new Error(body.message || "Request failed");
+    }
     showConfirmation(total);
   } catch (err) {
-    showError("Something went wrong sending your order. Please try again, or DM us on Instagram.");
+    showError(err.message && err.message !== "Failed to fetch"
+      ? "Your order could not be sent: " + err.message
+      : "Something went wrong sending your order. Please try again, or DM us on Instagram.");
     submitBtn.disabled = false;
     submitBtn.textContent = "Place Order";
   }
