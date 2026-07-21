@@ -435,9 +435,6 @@
       <label class="field">Email (for your receipt)
         <input type="email" name="email" required autocomplete="email">
       </label>
-      <label class="field">Phone
-        <input type="tel" name="phone" autocomplete="tel">
-      </label>
       <label class="field">Special requests
         <textarea name="notes" rows="3" placeholder="Allergies, occasion, custom requests…"></textarea>
       </label>
@@ -831,7 +828,6 @@ Apple Pay and Cash also accepted.
         _autoresponse: receipt,
         name: data.name,
         email: data.email,
-        phone: data.phone || "(not given)",
         order: itemsText,
         total: money(total),
         notes: data.notes || "(none)",
