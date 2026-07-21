@@ -141,6 +141,41 @@
   }
   button.add-btn:hover { background: var(--grape); color: #fff; }
 
+  /* ============ signature creations ============ */
+  .sig-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 14px;
+  }
+  .sig-card {
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    text-align: center;
+  }
+  .sig-card .sig-photo {
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    background: linear-gradient(150deg, #ece0fa 0%, #dcc4f5 100%);
+  }
+  .sig-card .sig-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .sig-card .sig-body { padding: 12px 14px 14px; }
+  .sig-card h3 {
+    color: var(--grape);
+    font-weight: 800;
+    font-size: 1rem;
+    margin-bottom: 2px;
+  }
+  .sig-card p { font-size: 0.83rem; font-style: italic; line-height: 1.4; }
+
   /* ============ modal ============ */
   .overlay {
     display: none;
@@ -419,6 +454,12 @@
 
   <div class="divider"><span>✦</span></div>
 
+  <h2 class="section-title">Signature Creations</h2>
+  <p class="section-note">Fan favorites for inspiration — build any of these with the items above!</p>
+  <div class="sig-grid" id="sig-grid"><!-- rendered by JS --></div>
+
+  <div class="divider"><span>✦</span></div>
+
   <!-- ============ CART + CHECKOUT ============ -->
   <form id="order-form" novalidate>
     <h2 class="section-title">Your Order</h2>
@@ -435,6 +476,12 @@
       <label class="field">Email (for your receipt)
         <input type="email" name="email" required autocomplete="email">
       </label>
+      <label class="field">Phone (in case we have questions about your order)
+        <input type="tel" name="phone" required autocomplete="tel">
+      </label>
+      <label class="field">Pickup date <span style="font-weight:400;font-style:italic">(we need at least 2–3 days notice)</span>
+        <input type="date" name="pickup_date" required>
+      </label>
       <label class="field">Special requests
         <textarea name="notes" rows="3" placeholder="Allergies, occasion, custom requests…"></textarea>
       </label>
@@ -445,7 +492,7 @@
       <ul>
         <li>Payment due at time of order — <em>do not send payment without order confirmation</em></li>
         <li>Venmo, Apple Pay and Cash accepted</li>
-        <li>No same-day orders</li>
+        <li>Orders need at least 2–3 days notice</li>
       </ul>
     </div>
 
@@ -582,15 +629,33 @@ const CONFIG = {
     { name: "Jolly Ranchers (assorted)", price: 2 },
     { name: "Jolly Ranchers (blue razz only)", price: 2 },
     { name: "Cotton Candy Crumble", price: 2 },
+    { name: "Lemonade Crumble", price: 2 },
+    { name: "Limeade Crumble", price: 2 },
     { name: "Nerds", price: 2 },
-    { name: "Sweet & Sour Coating", price: 2 },
     { name: "Caramel Bits", price: 2 },
+    { name: "Add Sour Coating to any topping", price: 1 },
     { name: "Wrap in fruit roll-ups", price: 5 },
   ],
 
   flavors: [
     "Cotton Candy", "Tutti Frutti", "Strawberry", "Blue Raspberry",
-    "Watermelon", "Peach Mango", "Bubble Gum", "Green Apple",
+    "Raspberry", "Cherry", "Watermelon", "Peach Mango",
+    "Bubble Gum", "Green Apple",
+  ],
+
+  // Signature combo showcase — descriptions are editable; to add a photo,
+  // drop an image in assets/ and set photo: "assets/filename.jpg"
+  signatures: [
+    { name: "Ultimate Cotton Candy", emoji: "🍭", photo: "",
+      desc: "Cotton candy flavor topped with cotton candy crumble" },
+    { name: "Sour Blue Raspberry", emoji: "💙", photo: "",
+      desc: "Blue raspberry flavor with sour-coated blue razz Jolly Ranchers" },
+    { name: "Caramel Green Apple", emoji: "🍏", photo: "",
+      desc: "Green apple flavor topped with caramel bits" },
+    { name: "Raspberry Lemonade", emoji: "🍋", photo: "",
+      desc: "Raspberry flavor topped with lemonade crumble" },
+    { name: "Cherry Limeade", emoji: "🍒", photo: "",
+      desc: "Cherry flavor topped with limeade crumble" },
   ],
 };
 /* ===================================================================== */
@@ -605,6 +670,10 @@ const submitBtn = document.getElementById("submit-btn");
 const errorEl = document.getElementById("error-msg");
 
 document.getElementById("year").textContent = new Date().getFullYear();
+
+// at least 2–3 days notice: earliest pickup is 2 days out
+const minPickup = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000);
+form.pickup_date.min = minPickup.toISOString().slice(0, 10);
 
 function money(n) { return "$" + n.toFixed(2); }
 
@@ -633,6 +702,15 @@ function renderCards(sections, containerId, startIndex) {
 }
 const fruitCount = renderCards(CONFIG.fruits, "fruit-grid", 0);
 renderCards(CONFIG.combos, "combo-grid", fruitCount);
+
+document.getElementById("sig-grid").innerHTML = CONFIG.signatures.map(s => `
+  <div class="sig-card">
+    <div class="sig-photo">${s.photo ? `<img src="${s.photo}" alt="${s.name}">` : s.emoji}</div>
+    <div class="sig-body">
+      <h3>${s.name}</h3>
+      <p>${s.desc}</p>
+    </div>
+  </div>`).join("");
 
 document.addEventListener("click", (e) => {
   const btn = e.target.closest("button.add-btn");
@@ -800,6 +878,7 @@ Order summary:
 ${itemsText}
 
 Total: ${money(total)}
+Pickup date: ${data.pickup_date}
 
 Payment is due at time of order, but please DO NOT send payment
 until BB confirms your order.
@@ -824,6 +903,8 @@ Apple Pay and Cash also accepted.
         _autoresponse: receipt,
         name: data.name,
         email: data.email,
+        phone: data.phone,
+        pickup_date: data.pickup_date,
         order: itemsText,
         total: money(total),
         notes: data.notes || "(none)",
