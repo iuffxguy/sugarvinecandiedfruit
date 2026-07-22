@@ -175,6 +175,25 @@
     margin-bottom: 2px;
   }
   .sig-card p { font-size: 0.83rem; font-style: italic; line-height: 1.4; }
+  .sig-card { cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; }
+  .sig-card:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(157, 47, 209, 0.18); }
+  .sig-card .order-hint {
+    display: inline-block;
+    margin-top: 6px;
+    color: var(--grape);
+    font-weight: 700;
+    font-style: normal;
+    font-size: 0.8rem;
+  }
+  .sig-ingredients { font-size: 0.9rem; font-style: italic; }
+  #sig-photo {
+    width: 100%;
+    height: 170px;
+    object-fit: cover;
+    border-radius: 12px;
+    margin-top: 10px;
+    display: none;
+  }
 
   /* ============ modal ============ */
   .overlay {
@@ -463,7 +482,7 @@
   <!-- ============ CART + CHECKOUT ============ -->
   <form id="order-form" novalidate>
     <h2 class="section-title">Your Order</h2>
-    <p class="section-note">Tap “Add” on any item above to pick flavors &amp; toppings</p>
+    <p class="section-note">Tap “Add” on any item — or tap a Signature Creation — to build your order</p>
     <div class="cart" id="cart"></div>
 
     <div class="divider"><span>✦</span></div>
@@ -555,6 +574,30 @@
   </div>
 </div>
 
+<!-- ============ SIGNATURE CREATION MODAL ============ -->
+<div class="overlay" id="sig-overlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="sig-title">
+    <button type="button" class="close-x" id="sig-close" aria-label="Close">×</button>
+    <h3 id="sig-title"></h3>
+    <p class="sig-ingredients" id="sig-ingredients"></p>
+    <img id="sig-photo" alt="">
+
+    <h4>Pick a size</h4>
+    <div class="pick-grid" id="sig-sizes"></div>
+
+    <div class="qty-row">
+      <strong>Quantity</strong>
+      <div class="qty">
+        <button type="button" id="sig-qty-minus" aria-label="Decrease quantity">−</button>
+        <span class="count" id="sig-qty-count">1</span>
+        <button type="button" id="sig-qty-plus" aria-label="Increase quantity">+</button>
+      </div>
+    </div>
+
+    <button type="button" class="confirm-add" id="sig-confirm">Add to order</button>
+  </div>
+</div>
+
 <footer>© <span id="year"></span> BB's Sugarvine Candied Fruit</footer>
 
 <script>
@@ -643,19 +686,35 @@ const CONFIG = {
     "Bubble Gum", "Green Apple",
   ],
 
-  // Signature combo showcase — descriptions are editable; to add a photo,
-  // drop an image in assets/ and set photo: "assets/filename.jpg"
+  // Signature creations — orderable via their own popup.
+  // flavor + toppingNames define the ingredients; the popup price is
+  // size price + the listed toppings' prices (toppingNames must match
+  // names in the toppings list above). To add a photo, drop an image
+  // in assets/ and set photo: "assets/filename.jpg"
   signatures: [
     { name: "Ultimate Cotton Candy", emoji: "🍭", photo: "",
-      desc: "Cotton candy flavor topped with cotton candy crumble" },
+      desc: "Cotton candy flavor topped with cotton candy crumble",
+      flavor: "Cotton Candy", toppingNames: ["Cotton Candy Crumble"] },
     { name: "Sour Blue Raspberry", emoji: "💙", photo: "",
-      desc: "Blue raspberry flavor with sour-coated blue razz Jolly Ranchers" },
+      desc: "Blue raspberry flavor with sour-coated blue razz Jolly Ranchers",
+      flavor: "Blue Raspberry",
+      toppingNames: ["Jolly Ranchers (blue razz only)", "Add Sour Coating to any topping"] },
     { name: "Caramel Green Apple", emoji: "🍏", photo: "",
-      desc: "Green apple flavor topped with caramel bits" },
+      desc: "Green apple flavor topped with caramel bits",
+      flavor: "Green Apple", toppingNames: ["Caramel Bits"] },
     { name: "Raspberry Lemonade", emoji: "🍋", photo: "",
-      desc: "Raspberry flavor topped with lemonade crumble" },
+      desc: "Raspberry flavor topped with lemonade crumble",
+      flavor: "Raspberry", toppingNames: ["Lemonade Crumble"] },
     { name: "Cherry Limeade", emoji: "🍒", photo: "assets/sig-cherry-limeade.jpg",
-      desc: "Cherry flavor topped with limeade crumble" },
+      desc: "Cherry flavor topped with limeade crumble",
+      flavor: "Cherry", toppingNames: ["Limeade Crumble"] },
+  ],
+
+  // Base sizes for signature creations (candied grape pricing)
+  signatureSizes: [
+    { name: "Small",   price: 15 },
+    { name: "Large",   price: 25 },
+    { name: "X-Large", price: 45 },
   ],
 };
 /* ===================================================================== */
@@ -703,14 +762,27 @@ function renderCards(sections, containerId, startIndex) {
 const fruitCount = renderCards(CONFIG.fruits, "fruit-grid", 0);
 renderCards(CONFIG.combos, "combo-grid", fruitCount);
 
-document.getElementById("sig-grid").innerHTML = CONFIG.signatures.map(s => `
-  <div class="sig-card">
+document.getElementById("sig-grid").innerHTML = CONFIG.signatures.map((s, i) => `
+  <div class="sig-card" data-sig="${i}" role="button" tabindex="0" aria-label="Order ${s.name}">
     <div class="sig-photo">${s.photo ? `<img src="${s.photo}" alt="${s.name}">` : s.emoji}</div>
     <div class="sig-body">
       <h3>${s.name}</h3>
       <p>${s.desc}</p>
+      <span class="order-hint">Tap to order →</span>
     </div>
   </div>`).join("");
+
+document.getElementById("sig-grid").addEventListener("click", (e) => {
+  const card = e.target.closest(".sig-card");
+  if (card) openSigModal(CONFIG.signatures[Number(card.dataset.sig)]);
+});
+document.getElementById("sig-grid").addEventListener("keydown", (e) => {
+  const card = e.target.closest(".sig-card");
+  if (card && (e.key === "Enter" || e.key === " ")) {
+    e.preventDefault();
+    openSigModal(CONFIG.signatures[Number(card.dataset.sig)]);
+  }
+});
 
 document.addEventListener("click", (e) => {
   const btn = e.target.closest("button.add-btn");
@@ -755,7 +827,81 @@ function closeModal() {
 }
 document.getElementById("modal-close").addEventListener("click", closeModal);
 overlay.addEventListener("click", (e) => { if (e.target === overlay) closeModal(); });
-document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") { closeModal(); closeSigModal(); } });
+
+/* ---------- signature creation modal ---------- */
+const sigOverlay = document.getElementById("sig-overlay");
+const sigConfirmBtn = document.getElementById("sig-confirm");
+const sigQtyCountEl = document.getElementById("sig-qty-count");
+let activeSig = null;
+let sigQty = 1;
+
+function sigToppings(sig) {
+  return sig.toppingNames
+    .map(n => CONFIG.toppings.find(t => t.name === n))
+    .filter(Boolean);
+}
+function sigAddon(sig) {
+  return sigToppings(sig).reduce((sum, t) => sum + t.price, 0);
+}
+function sigSelectedSize() {
+  const checked = sigOverlay.querySelector('input[name="sig-size"]:checked');
+  return CONFIG.signatureSizes[Number(checked.value)];
+}
+function openSigModal(sig) {
+  activeSig = sig;
+  sigQty = 1;
+  sigQtyCountEl.textContent = "1";
+
+  document.getElementById("sig-title").textContent = sig.name;
+  document.getElementById("sig-ingredients").textContent = sig.desc;
+  const photo = document.getElementById("sig-photo");
+  photo.src = sig.photo || "";
+  photo.alt = sig.name;
+  photo.style.display = sig.photo ? "block" : "none";
+
+  const addon = sigAddon(sig);
+  document.getElementById("sig-sizes").innerHTML = CONFIG.signatureSizes.map((s, i) => `
+    <label><input type="radio" name="sig-size" value="${i}" ${i === 0 ? "checked" : ""}>
+      <span>${s.name}</span><span class="addon">${money(s.price + addon)}</span></label>`).join("");
+
+  sigOverlay.classList.add("open");
+  document.body.classList.add("modal-open");
+  updateSigPrice();
+}
+function closeSigModal() {
+  sigOverlay.classList.remove("open");
+  document.body.classList.remove("modal-open");
+  activeSig = null;
+}
+function updateSigPrice() {
+  const unit = sigSelectedSize().price + sigAddon(activeSig);
+  sigConfirmBtn.textContent = `Add to order — ${money(unit * sigQty)}`;
+}
+document.getElementById("sig-close").addEventListener("click", closeSigModal);
+sigOverlay.addEventListener("click", (e) => { if (e.target === sigOverlay) closeSigModal(); });
+sigOverlay.addEventListener("change", updateSigPrice);
+document.getElementById("sig-qty-minus").addEventListener("click", () => {
+  sigQty = Math.max(1, sigQty - 1);
+  sigQtyCountEl.textContent = sigQty;
+  updateSigPrice();
+});
+document.getElementById("sig-qty-plus").addEventListener("click", () => {
+  sigQty += 1;
+  sigQtyCountEl.textContent = sigQty;
+  updateSigPrice();
+});
+sigConfirmBtn.addEventListener("click", () => {
+  const size = sigSelectedSize();
+  addToCart({
+    variant: { section: "Signature", name: `${activeSig.name} (${size.name})`, price: size.price },
+    flavors: [activeSig.flavor],
+    toppings: sigToppings(activeSig),
+    qty: sigQty,
+    unitPrice: size.price + sigAddon(activeSig),
+  });
+  closeSigModal();
+});
 
 function pickedFlavors() {
   return [...modalFlavorsEl.querySelectorAll("input:checked")].map(cb => cb.value);
@@ -794,21 +940,24 @@ confirmBtn.addEventListener("click", () => {
     modalErrorEl.style.display = "block";
     return;
   }
-  const line = {
+  addToCart({
     variant: activeVariant,
     flavors,
     toppings: pickedToppings(),
     qty,
     unitPrice: unitPrice(),
-  };
+  });
+  closeModal();
+});
+
+function addToCart(line) {
   // merge with an identical existing line
   const key = l => JSON.stringify([l.variant.section, l.variant.name, l.flavors, l.toppings.map(t => t.name)]);
   const existing = cart.find(l => key(l) === key(line));
   if (existing) existing.qty += line.qty;
   else cart.push(line);
-  closeModal();
   renderCart();
-});
+}
 
 /* ---------- cart ---------- */
 function lineTitle(l) { return `${l.variant.section} — ${l.variant.name}`; }
